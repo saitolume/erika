@@ -18,7 +18,7 @@ export class Erika {
     const tweets: Tweet[] = await this.#twitter
       .get(
         "statuses/home_timeline.json",
-        sinceId ? { count: "100", since_id: sinceId } : { count: "100" },
+        sinceId ? { count: "200", since_id: sinceId } : { count: "200" },
       )
       .then((res) => res.json());
 
@@ -42,7 +42,9 @@ export class Erika {
     await Promise.all(
       tweets.map(async (tweet) => {
         const includesTriger = this.checkIncludesTrigger(tweet);
-        if (!includesTriger) return;
+        const isRt = this.checkRt(tweet);
+        if (!includesTriger || isRt) return;
+        console.log(tweet)
 
         return this.#twitter.post("statuses/update.json", {
           in_reply_to_status_id: tweet.id_str,
@@ -70,5 +72,9 @@ export class Erika {
 
   private checkNotFollowing(user: User) {
     return !user.following;
+  }
+
+  private checkRt(tweet: Tweet) {
+    return tweet.text.includes('RT');
   }
 }
