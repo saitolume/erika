@@ -1,6 +1,6 @@
 import { imageUrls, messages, triggers } from "./constants.ts";
 import { db } from "./mongo.ts";
-import { Tweet } from "./types.ts";
+import { Tweet, User } from "./types.ts";
 import { Twitter } from "../deps.ts";
 
 const historiesRef = db.collection("histories");
@@ -31,6 +31,13 @@ export class Erika {
     return tweets;
   }
 
+  public async readFollowers(): Promise<User[]> {
+    const { users } = await this.#twitter
+      .get("followers/list.json", { count: "100" })
+      .then((res) => res.json());
+    return users;
+  }
+
   public async reply(tweets: Tweet[]): Promise<void> {
     await Promise.all(
       tweets.map(async (tweet) => {
@@ -45,7 +52,23 @@ export class Erika {
     );
   }
 
+  public async followBack(followers: User[]): Promise<void> {
+    const notFollowingUsers = followers.filter(this.checkNotFollowing);
+    await Promise.all(
+      notFollowingUsers.map(async (user) => {
+        this.#twitter.post("friendships/create.json", {
+          user_id: user.id_str,
+          follow: "true",
+        });
+      }),
+    );
+  }
+
   private checkIncludesTrigger(tweet: Tweet) {
     return triggers.some((word) => tweet.text.includes(word));
+  }
+
+  private checkNotFollowing(user: User) {
+    return !user.following;
   }
 }

@@ -7,3 +7,6 @@ const erika = new Erika(twitter);
 
 const tweets = await erika.readTimeline();
 await erika.reply(tweets);
+
+const followers = await erika.readFollowers();
+await erika.followBack(followers);

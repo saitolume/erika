@@ -19,6 +19,7 @@ export type User = {
       urls: unknown[];
     };
   };
+  following: boolean;
 };
 
 export type Tweet = {
