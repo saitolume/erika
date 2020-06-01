@@ -28,6 +28,7 @@ export type Tweet = {
   text: string;
   user: User;
   created_at: string;
+  favorited: boolean;
 };
 
 export type Keys = {

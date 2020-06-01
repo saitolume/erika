@@ -1,9 +1,6 @@
 import { imageUrls, messages, triggers } from "./constants.ts";
-import { db } from "./mongo.ts";
 import { Tweet, User } from "./types.ts";
 import { Twitter } from "../deps.ts";
-
-const historiesRef = db.collection("histories");
 
 export class Erika {
   #twitter: Twitter;
@@ -13,22 +10,16 @@ export class Erika {
   }
 
   public async readTimeline(): Promise<Tweet[]> {
-    const [{ sinceId }] = await historiesRef.find(undefined, { limit: 1 });
-
     const tweets: Tweet[] = await this.#twitter
-      .get(
-        "statuses/home_timeline.json",
-        sinceId ? { count: "200", since_id: sinceId } : { count: "200" },
-      )
+      .get("statuses/home_timeline.json", { count: "200" })
       .then((res) => res.json());
 
-    const lastIdTweet = tweets[tweets.length - 1]?.id_str;
-
-    if (lastIdTweet) {
-      await historiesRef.insertOne({ sinceId: lastIdTweet });
-    }
-
-    return tweets;
+    return tweets.filter((tweet) => {
+      const includesTriger = this.checkIncludesTrigger(tweet);
+      const isRt = this.checkRt(tweet);
+      const isFavorite = this.checkIsFavorite(tweet);
+      return !isFavorite && !isRt && includesTriger;
+    });
   }
 
   public async readFollowers(): Promise<User[]> {
@@ -41,10 +32,7 @@ export class Erika {
   public async reply(tweets: Tweet[]): Promise<void> {
     await Promise.all(
       tweets.map(async (tweet) => {
-        const includesTriger = this.checkIncludesTrigger(tweet);
-        const isRt = this.checkRt(tweet);
-        if (!includesTriger || isRt) return;
-
+        await this.favarite(tweet);
         return this.#twitter.post("statuses/update.json", {
           in_reply_to_status_id: tweet.id_str,
           status: `@${tweet.user.screen_name} ${messages} ${imageUrls[0]}`,
@@ -65,6 +53,11 @@ export class Erika {
     );
   }
 
+  private async favarite(tweet: Tweet): Promise<void> {
+    if (this.checkIsFavorite(tweet)) return;
+    await this.#twitter.post("favorites/create.json", { id: tweet.id_str });
+  }
+
   private checkIncludesTrigger(tweet: Tweet) {
     return triggers.some((word) => tweet.text.includes(word));
   }
@@ -73,7 +66,11 @@ export class Erika {
     return !user.following;
   }
 
+  private checkIsFavorite(tweet: Tweet) {
+    return tweet.favorited;
+  }
+
   private checkRt(tweet: Tweet) {
-    return tweet.text.includes('RT');
+    return tweet.text.includes("RT");
   }
 }
