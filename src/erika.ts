@@ -44,7 +44,6 @@ export class Erika {
         const includesTriger = this.checkIncludesTrigger(tweet);
         const isRt = this.checkRt(tweet);
         if (!includesTriger || isRt) return;
-        console.log(tweet)
 
         return this.#twitter.post("statuses/update.json", {
           in_reply_to_status_id: tweet.id_str,
