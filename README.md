@@ -2,6 +2,8 @@
 
 はらへりに羊羹を渡す矢野エリカ <https://twitter.com/yano_no_yokan>
 
+⚠️Not yet working on Docker
+
 ## Requirements
 
 ```bash
@@ -23,7 +25,7 @@ build environment:
 ## Command
 
 ```bash
-$ deno run --allow-net --allow-env --allow-write --allow-read --allow-plugin --unstable mod.ts
+$ deno run --allow-net --allow-env mod.ts
 ```
 
 ## Environment variables

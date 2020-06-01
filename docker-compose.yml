@@ -8,13 +8,4 @@ services:
       TWITTER_SECRET_KEY: ${TWITTER_SECRET_KEY}
       TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN}
       TWITTER_ACCESS_TOKEN_SECRET: ${TWITTER_ACCESS_TOKEN_SECRET}
-    command: 'run --allow-net --allow-env --allow-write --allow-read --allow-plugin --unstable mod.ts'
-    depends_on:
-      - db
-
-  db:
-    image: mongo
-    restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
+    command: 'run --allow-net --allow-env mod.ts'
